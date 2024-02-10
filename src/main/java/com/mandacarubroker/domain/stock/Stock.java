@@ -15,22 +15,26 @@ import lombok.NoArgsConstructor;
 public class Stock {
 
     @Id @GeneratedValue(strategy = GenerationType.UUID)
-   //@Column(name = "id" )
     private String id;
-    @Column(unique= true )
+
     private String symbol;
-    //@Column(name = "companyName" )
     private String companyName;
-    //@Column(name = "price" )
     private double price;
+    private boolean operation;
 
     public Stock(RequestStockDTO requestStockDTO){
         this.symbol = requestStockDTO.symbol();
         this.companyName = requestStockDTO.companyName();
-        this.price = changePrice(requestStockDTO.price(), true);
+        this.operation = requestStockDTO.operation();
+        this.price = changePrice(requestStockDTO.price(), this.operation);
+
+
     }
 
     public double changePrice(double amount, boolean increase) {
+
+
+
         if (increase) {
             if (amount < this.price) {
                 return increasePrice(amount);
@@ -41,9 +45,7 @@ public class Stock {
             if (amount > this.price) {
                 return increasePrice(amount);
             } else {
-                //erro sem sentido
-//                return this.decreasePrice(amount);
-                return decreasePrice(amount);
+                return this.decreasePrice(amount);
             }
         }
     }
