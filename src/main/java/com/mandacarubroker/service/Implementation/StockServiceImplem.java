@@ -51,7 +51,7 @@ class StockServiceImplem implements StockService {
                     .map(stock -> {
                         stock.setSymbol(stockUp.getSymbol());
                         stock.setCompanyName(stockUp.getCompanyName());
-                        double newPrice = stock.changePrice(stockUp.getPrice(),true);
+                        double newPrice = stock.changePrice(stockUp.getPrice());
                         stock.setPrice(newPrice);
 
                         return stockRepository.save(stock);

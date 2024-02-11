@@ -15,8 +15,7 @@ public record RequestStockDTO(
         @NotBlank(message = "Company name cannot be blank")
         String companyName,
         @NotNull(message = "Price cannot be null")
-        double price,
-        @NotNull(message="operation cannot be null")
-        boolean operation
+        double price
+
 ){
         }
