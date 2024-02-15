@@ -1,9 +1,10 @@
 package com.mandacarubroker.service.Implementation;
 
-import com.mandacarubroker.domain.stock.RequestStockDTO;
+import com.mandacarubroker.domain.dto.RequestStockDTO;
 import com.mandacarubroker.domain.stock.Stock;
-import com.mandacarubroker.domain.stock.StockRepository;
+import com.mandacarubroker.repositories.StockRepository;
 import com.mandacarubroker.service.StockService;
+import com.mandacarubroker.service.exceptions.DataIntegratyViolationException;
 import com.mandacarubroker.service.exceptions.StockNotFoundException;
 import jakarta.validation.*;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,10 @@ import java.util.Set;
 public
 class StockServiceImplem implements StockService {
 
+//    @Autowired
     private final StockRepository stockRepository;
+
+
     public StockServiceImplem(StockRepository stockRepository) {
         this.stockRepository = stockRepository;
     }
@@ -30,11 +34,6 @@ class StockServiceImplem implements StockService {
                 ()-> new StockNotFoundException("Stock not found"));
     }
 
-    public Stock createStock(RequestStockDTO data) {
-        Stock novaAcao = new Stock(data);
-        validateRequestStockDTO(data);
-        return stockRepository.save(novaAcao);
-    }
 
     public void deleteStock(String id) {
         Stock stock = stockRepository.findById(id).orElseThrow(
@@ -45,19 +44,45 @@ class StockServiceImplem implements StockService {
 
     public Stock validateAndUpdateStock(String id, RequestStockDTO data) {
             validateRequestStockDTO(data);
+        Optional<Stock> stockId = stockRepository.findById(id);
+            if(stockId.isPresent()) {
+                //findBySymbolCompanyName(id, data);
+                findBySymbol(data);
+            }
 
-            Stock stockUp = new Stock(data);
+            //Stock stockUp = new Stock(data);
             return stockRepository.findById(id)
                     .map(stock -> {
-                        stock.setSymbol(stockUp.getSymbol());
-                        stock.setCompanyName(stockUp.getCompanyName());
-                        double newPrice = stock.changePrice(stockUp.getPrice());
+                        stock.setSymbol(data.symbol());
+                        stock.setCompanyName(data.companyName());
+                        double newPrice = stock.changePrice(data.price());
                         stock.setPrice(newPrice);
 
                         return stockRepository.save(stock);
                     }).orElseThrow(
-                            ()-> new StockNotFoundException("Stock not found"));
+                            ()-> new StockNotFoundException(("Stock not found")));
+
     }
+
+    private void findBySymbol(RequestStockDTO data) {
+        Optional<Stock> stock = stockRepository.findBySymbol(data.symbol());
+        if(stock.isPresent()) {
+            throw new DataIntegratyViolationException("Stock already registered with this symbol");
+        }
+    }
+
+
+    private void findBySymbolCompanyName(String id, RequestStockDTO data) {
+        Stock stock = stockRepository.findById(id).orElse(null);
+
+        assert stock != null;
+        if(!((data.symbol().equals(stock.getSymbol()))&&(data.companyName().equals(stock.getCompanyName())))) {
+
+            throw new DataIntegratyViolationException("Stock already registered with this symbol");
+        }
+    }
+
+
 
 
 
@@ -84,6 +109,7 @@ class StockServiceImplem implements StockService {
 
     public Stock validateAndCreateStock(RequestStockDTO data) {
         validateRequestStockDTO(data);
+        findBySymbol(data);
 
         Stock novaAcao = new Stock(data);
         return stockRepository.save(novaAcao);

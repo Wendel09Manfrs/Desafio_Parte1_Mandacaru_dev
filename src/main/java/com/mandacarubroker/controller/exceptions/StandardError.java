@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 @Setter
 public class StandardError {
 
+    private LocalDateTime timestamp;
     private HttpStatus status;
-    private String message;
+    private String error;
+
 }
