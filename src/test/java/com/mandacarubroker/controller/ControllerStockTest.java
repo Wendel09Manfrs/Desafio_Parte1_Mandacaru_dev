@@ -1,10 +1,8 @@
 package com.mandacarubroker.controller;
 
-
-//import com.mandacarubroker.controller.StockController;
 import com.mandacarubroker.domain.dto.RequestStockDTO;
 import com.mandacarubroker.domain.stock.Stock;
-import com.mandacarubroker.service.Implementation.StockServiceImplem;
+import com.mandacarubroker.service.implementation.StockServiceImplem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,19 +19,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 
-import static org.mockito.Mockito.*;
-
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 @SpringBootTest
 class ControllerStockTest {
-
     private static final String ID  = "12345";
     private static final Integer INDEX   = 0;
-    private static final String SYMBOL     = "AABB2";
-    private static final String COMPANYNAME    = "Petrobras";
+    private static final String SYMBOL    = "AABB2";
+    private static final String COMPANY = "Petrobras";
     private static final Double PRICE = 12.45;
-
-    private Stock stock = new Stock();
-    private RequestStockDTO requestStockDTO = new RequestStockDTO(SYMBOL, COMPANYNAME,  PRICE);
+    private Stock stock;
+    private RequestStockDTO requestStockDTO;
 
     @Autowired
     private StockController controller;
@@ -41,16 +40,13 @@ class ControllerStockTest {
     @MockBean
     private StockServiceImplem service;
 
-
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        startStock();
-    }
+        startStock();}
 
     @Test
-    void whenFindByIdThenReturnSuccess() {
+    void whenGetStockByIdThenReturnSuccess() {
         when(service.getStockById(anyString())).thenReturn(stock);
         ResponseEntity<Stock> response = controller.getStockById(ID);
 
@@ -61,15 +57,12 @@ class ControllerStockTest {
 
         assertEquals(ID, response.getBody().getId());
         assertEquals(SYMBOL, response.getBody().getSymbol());
-        assertEquals(COMPANYNAME, response.getBody().getCompanyName());
+        assertEquals(COMPANY, response.getBody().getCompanyName());
         assertEquals(PRICE, response.getBody().getPrice());
     }
-
     @Test
-    void whenFindAllThenReturnAListOfRequestStockDTO() {
+    void whenGetAllStocksThenReturnAListOfStock() {
         when(service.getAllStocks()).thenReturn(List.of(stock));
-//        when(mapper.map(any(), any())).thenReturn(requestStockDTO);
-
         ResponseEntity
                 <List<Stock>> response = controller.getAllStocks();
 
@@ -77,50 +70,37 @@ class ControllerStockTest {
         assertNotNull(response.getBody());
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(ResponseEntity.class, response.getClass());
-      //  assertEquals(ArrayList.class, response.getBody().getClass());
         assertEquals(Stock.class, response.getBody().get(INDEX).getClass());
-
         assertEquals(ID, response.getBody().get(INDEX).getId());
         assertEquals(SYMBOL, response.getBody().get(INDEX).getSymbol());
-        assertEquals(COMPANYNAME, response.getBody().get(INDEX).getCompanyName());
+        assertEquals(COMPANY, response.getBody().get(INDEX).getCompanyName());
         assertEquals(PRICE, response.getBody().get(INDEX).getPrice());
     }
-
     @Test
     void whenCreateThenReturnOk() {
         when(service.validateAndCreateStock(any())).thenReturn(stock);
-
         ResponseEntity<Stock> response = controller.createStock(requestStockDTO);
-
         assertEquals(ResponseEntity.class, response.getClass());
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
-
     @Test
     void whenUpdateThenReturnSuccess() {
         when(service.validateAndUpdateStock(ID, requestStockDTO)).thenReturn(stock);
-
         ResponseEntity<Stock> response = controller.updateStock(ID, requestStockDTO);
-
         assertNotNull(response);
         assertNotNull(response.getBody());
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(ResponseEntity.class, response.getClass());
         assertEquals(Stock.class, response.getBody().getClass());
-
         assertEquals(ID, response.getBody().getId());
         assertEquals(SYMBOL, response.getBody().getSymbol());
-        assertEquals(COMPANYNAME, response.getBody().getCompanyName());
+        assertEquals(COMPANY, response.getBody().getCompanyName());
         assertEquals(PRICE, response.getBody().getPrice());
-
     }
-
     @Test
     void whenDeleteThenReturnSuccess() {
         doNothing().when(service).deleteStock(anyString());
-
-        ResponseEntity<String> response = controller.delete(ID);
-
+        ResponseEntity<String> response = controller.deleteStock(ID);
         assertNotNull(response);
         assertEquals(ResponseEntity.class, response.getClass());
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -128,8 +108,10 @@ class ControllerStockTest {
     }
 
     private void startStock() {
-        requestStockDTO = new RequestStockDTO( SYMBOL, COMPANYNAME,  PRICE);
+        requestStockDTO = new RequestStockDTO( SYMBOL, COMPANY,  PRICE);
         stock = new Stock(requestStockDTO);
-        stock.setId("12345");
+        stock.setId(ID);
     }
+
+
 }

@@ -1,4 +1,4 @@
-package com.mandacarubroker.service.Implementation;
+package com.mandacarubroker.service.implementation;
 
 import com.mandacarubroker.domain.dto.RequestStockDTO;
 import com.mandacarubroker.domain.stock.Stock;
@@ -6,18 +6,27 @@ import com.mandacarubroker.repositories.StockRepository;
 import com.mandacarubroker.service.StockService;
 import com.mandacarubroker.service.exceptions.DataIntegratyViolationException;
 import com.mandacarubroker.service.exceptions.StockNotFoundException;
-import jakarta.validation.*;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.ConstraintViolation;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 @Service
 public
 class StockServiceImplem implements StockService {
 
-//    @Autowired
+    public static final Supplier<StockNotFoundException> NOT_FOUND_EXCEPTION_SUPPLIER =
+            () -> new StockNotFoundException(("Stock not found"));
+    //    @Autowired
     private final StockRepository stockRepository;
 
 
@@ -31,27 +40,27 @@ class StockServiceImplem implements StockService {
 
     public Stock getStockById(String id) {
         return stockRepository.findById(id).orElseThrow(
-                ()-> new StockNotFoundException("Stock not found"));
+                NOT_FOUND_EXCEPTION_SUPPLIER);
     }
 
 
     public void deleteStock(String id) {
         Stock stock = stockRepository.findById(id).orElseThrow(
-                () -> new StockNotFoundException("Stock not found"));
+                NOT_FOUND_EXCEPTION_SUPPLIER);
 
         stockRepository.deleteById(stock.getId());
     }
 
     public Stock validateAndUpdateStock(String id, RequestStockDTO data) {
-            validateRequestStockDTO(data);
+        validateRequestStockDTO(data);
         Optional<Stock> stockId = stockRepository.findById(id);
             if(stockId.isPresent()) {
-                //findBySymbolCompanyName(id, data);
-                findBySymbol(data);
-            }
+                Stock stockBD = stockId.get();
+                findComp(stockBD, data);
 
-            //Stock stockUp = new Stock(data);
-            return stockRepository.findById(id)
+
+            }
+            return stockId
                     .map(stock -> {
                         stock.setSymbol(data.symbol());
                         stock.setCompanyName(data.companyName());
@@ -60,8 +69,7 @@ class StockServiceImplem implements StockService {
 
                         return stockRepository.save(stock);
                     }).orElseThrow(
-                            ()-> new StockNotFoundException(("Stock not found")));
-
+                            NOT_FOUND_EXCEPTION_SUPPLIER);
     }
 
     private void findBySymbol(RequestStockDTO data) {
@@ -72,18 +80,11 @@ class StockServiceImplem implements StockService {
     }
 
 
-    private void findBySymbolCompanyName(String id, RequestStockDTO data) {
-        Stock stock = stockRepository.findById(id).orElse(null);
-
-        assert stock != null;
-        if(!((data.symbol().equals(stock.getSymbol()))&&(data.companyName().equals(stock.getCompanyName())))) {
-
-            throw new DataIntegratyViolationException("Stock already registered with this symbol");
-        }
+    private void findComp(Stock stockBD,RequestStockDTO data) {
+        if((!Objects.equals(data.symbol(), stockBD.getSymbol()))){
+                findBySymbol(data);
+            }
     }
-
-
-
 
 
     public static void validateRequestStockDTO(RequestStockDTO data) {
@@ -101,9 +102,12 @@ class StockServiceImplem implements StockService {
 
                 errorMessage.delete(errorMessage.length() - 2, errorMessage.length());
 
-                throw new ConstraintViolationException(errorMessage.toString(), violations);
+                    throw new ConstraintViolationException(errorMessage.toString(), violations);
             }
+        }catch (ValidationException ve) {
+            throw new ValidationException(ve.getMessage());
         }
+
     }
 
 
@@ -111,8 +115,8 @@ class StockServiceImplem implements StockService {
         validateRequestStockDTO(data);
         findBySymbol(data);
 
-        Stock novaAcao = new Stock(data);
-        return stockRepository.save(novaAcao);
+        Stock newStock = new Stock(data);
+        return stockRepository.save(newStock);
     }
 
 
