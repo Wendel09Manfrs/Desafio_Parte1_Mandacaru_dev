@@ -15,7 +15,7 @@ GET /stocks
 
 ### Obter uma Ação por ID
 
-Retorna os detalhes de uma ação específica com base no ID.
+Retorna os detalhes de uma ação específica com base no ID, inclusive sua taxa de valorização ou desvalorização
 
 **Endpoint:**
 ```http
@@ -40,7 +40,7 @@ POST /stocks
 
 ```
 ### Atualizar uma Ação por ID
-Atualiza os detalhes de uma ação específica com base no ID.
+Atualiza os detalhes de uma ação específica com base no ID, aplicando os devidos tratamentos de exceções
 
 **Endpoint:**
 ```http
@@ -82,7 +82,10 @@ DELETE /stocks/{id}
 - Spring Boot
 - Spring Data JPA
 - Maven
-- PostgreSQL
+- MySQL
+- Heidi SQL
+- CheckStyle
+- SonarLint
 
 ## Contribuições
 Contribuições são bem-vindas!
